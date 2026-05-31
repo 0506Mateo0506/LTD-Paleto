@@ -757,6 +757,7 @@ body.light-mode tr:hover td{background:rgba(0,0,0,0.02);}
               <button class="btn btn-danger" onclick="resetData('chat')">💬 Chat Interne</button>
               <button class="btn btn-danger" onclick="resetData('notes')">📝 Notes</button>
               <button class="btn btn-danger" style="background:rgba(239,68,68,0.3);border-color:var(--red)" onclick="resetData('all')">⚠ TOUT RÉINITIALISER</button>
+              <button class="btn btn-primary" onclick="resetCatalogue()" style="background:var(--blue);color:#fff">🔄 Recharger le catalogue (nouveaux articles)</button>
             </div>
           </div>
         </div>
@@ -1281,7 +1282,27 @@ async function loadAll(){
   try{mpData=await dbGet('mp_conversations');}catch(e){}
 
   if(g) GRADES=g;
-  if(p) PRODUCTS=p;
+  if(p){
+    // Fusionner : les produits du CODE ont priorité (nouveaux articles + prix vidéo)
+    const dbProducts=p;
+    PRODUCTS.forEach(prod=>{
+      const dbProd=dbProducts.find(d=>d.name===prod.name);
+      if(dbProd && dbProd._customPrice){
+        // Prix customisé manuellement par l'admin -> on le conserve
+        prod.price=dbProd.price;
+      }
+      // Sinon on garde le prix du code (mis à jour depuis la vidéo)
+    });
+    // Ajouter les produits custom créés manuellement depuis la DB (pas dans le code)
+    dbProducts.forEach(dbProd=>{
+      if(!PRODUCTS.find(p=>p.name===dbProd.name)){
+        PRODUCTS.push(dbProd);
+      }
+    });
+    await saveProducts();
+  } else {
+    await saveProducts();
+  }
 
   // Toujours fusionner avec les comptes par défaut (dont patron)
   accounts = a || [];
@@ -1308,6 +1329,20 @@ async function loadAll(){
     await saveStock();
   }else{
     stockData=st;
+    // Fusionner les nouveaux produits manquants dans le stock existant
+    let stockChanged=false;
+    PRODUCTS.forEach(p=>{
+      const existing=stockData.find(s=>s.name===p.name);
+      if(!existing){
+        stockData.push({name:p.name,qty:0,seuil:5,sellPrice:p.price,cat:p.cat});
+        stockChanged=true;
+      } else if(!existing._customPrice && existing.sellPrice!==p.price){
+        // Mettre à jour le prix si pas customisé
+        existing.sellPrice=p.price;
+        stockChanged=true;
+      }
+    });
+    if(stockChanged) await saveStock();
   }
 
   // Initialiser les listeners temps réel Firebase
@@ -1906,7 +1941,7 @@ function renderSaleItemsList(){
     <div class="sale-item-row" data-idx="${i}">
       <select class="form-select" style="flex:2;min-width:120px" onchange="onItemProductChange(${i},this.value)">
         <option value="">— Produit —</option>
-        ${PRODUCTS.map(p=>`<option value="${p.name}" data-price="${p.price}" ${item.name===p.name?'selected':''}>${p.name}</option>`).join('')}
+        ${PRODUCTS.map(p=>{const sd=stockData.find(s=>s.name===p.name);const qty=sd?sd.qty:0;const oos=qty<=0;return`<option value="${p.name}" data-price="${p.price}" ${item.name===p.name?'selected':''}>${p.name}${oos?' ⚠ Rupture':' ('+qty+')'}</option>`;}).join('')}
       </select>
       <input type="number" class="form-input" style="width:70px;flex:0 0 70px" min="1" value="${item.qty}" placeholder="Qté" onchange="onItemQtyChange(${i},this.value)">
       <span style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);min-width:70px;text-align:right">${item.price?fmtN(item.price*item.qty)+' $':'—'}</span>
@@ -2009,6 +2044,26 @@ async function addSale(){
   const time=document.getElementById('sale-time')?.value||'--:--';
   const acc=accounts.find(a=>a.id===empId)||currentUser;
   const comm=acc?GRADES[acc.grade].commission:25;
+  // Vérification du stock avant de valider
+  const stockErrors=[];
+  validItems.forEach(item=>{
+    const si=stockData.findIndex(s=>s.name===item.name);
+    if(si>=0 && stockData[si].qty > 0){
+      // Stock suivi → vérifier quantité disponible
+      const available=stockData[si].qty;
+      if(available<item.qty){
+        stockErrors.push(`❌ ${item.name} : stock insuffisant (${available} dispo, ${item.qty} demandé)`);
+      }
+    } else if(si>=0 && stockData[si].qty === 0){
+      // Stock à 0 → refuser (stock épuisé)
+      stockErrors.push(`❌ ${item.name} : stock épuisé (0 en stock)`);
+    }
+    // Si le produit n'est pas dans stockData → vente libre (pas de suivi)
+  });
+  if(stockErrors.length){
+    showToast('⚠ '+stockErrors[0],true);
+    return;
+  }
   const total=validItems.reduce((a,i)=>a+i.price*i.qty,0);
   const commAmt=Math.round(total*comm/100);
   const benef=total-commAmt;
@@ -2023,10 +2078,10 @@ async function addSale(){
   };
   sales.push(saleObj);
   await saveSales();
-  // Update stock
+  // Déduction du stock après validation
   validItems.forEach(item=>{
     const si=stockData.findIndex(s=>s.name===item.name);
-    if(si>=0&&stockData[si].qty>0)stockData[si].qty=Math.max(0,stockData[si].qty-item.qty);
+    if(si>=0) stockData[si].qty=Math.max(0,stockData[si].qty-item.qty);
   });
   await saveStock();
   renderSalesTable();updateKPIs();renderEmpDash();renderTopEmp();renderRecentTable();
@@ -2102,7 +2157,7 @@ function renderStock(){
 function setStockFilter(f,btn){stockFilter=f;document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderStock();}
 async function updateQty(i,v){stockData[i].qty=parseInt(v)||0;await saveStock();updateKPIs();}
 async function updateSeuil(i,v){stockData[i].seuil=parseInt(v)||0;await saveStock();renderStock();}
-async function updatePrice(i,v){stockData[i].sellPrice=parseInt(v)||0;const prod=PRODUCTS.find(p=>p.name===stockData[i].name);if(prod)prod.price=stockData[i].sellPrice;await saveStock();await saveProducts();renderStock();showToast('✓ Prix mis à jour');}
+async function updatePrice(i,v){stockData[i].sellPrice=parseInt(v)||0;const prod=PRODUCTS.find(p=>p.name===stockData[i].name);if(prod){prod.price=stockData[i].sellPrice;prod._customPrice=true;}await saveStock();await saveProducts();renderStock();showToast('✓ Prix mis à jour');}
 async function updateManualStatus(i,v){stockData[i].manualStatus=v||null;await saveStock();renderStock();}
 async function restock(i,n){stockData[i].qty+=n;await saveStock();renderStock();updateKPIs();showToast(`✓ +${n} ${stockData[i].name}`);}
 
@@ -2638,6 +2693,26 @@ function renderPlanning(){
 }
 
 // ===== RÉINITIALISATION DES DONNÉES =====
+async function resetCatalogue(){
+  openModal('Recharger le catalogue','Ceci va forcer la mise à jour du catalogue avec tous les nouveaux articles et leurs prix corrects. Les ventes et le stock existants sont conservés.',async()=>{
+    // Effacer les produits en base pour forcer rechargement depuis le code
+    await dbSet('products', null);
+    // Effacer le stock pour régénérer avec les nouveaux produits
+    // On conserve les quantités des produits déjà connus
+    const oldStock = [...stockData];
+    stockData = PRODUCTS.map(p=>{
+      const old = oldStock.find(s=>s.name===p.name);
+      return {name:p.name, qty:old?old.qty:0, seuil:old?old.seuil:5, sellPrice:p.price, cat:p.cat};
+    });
+    await saveStock();
+    await saveProducts();
+    showToast('✓ Catalogue rechargé : '+PRODUCTS.length+' articles');
+    renderStock();
+    renderProducts();
+    renderSaleItemsList();
+  });
+}
+
 function resetData(tab){
   const labels={dashboard:'le Tableau de Bord (ventes)',compte:'Mon Compte (ventes)',caisse:'la Caisse (ventes du jour)',run:'les Runs',rapport:'les Rapports (ventes)',comptabilite:'la Comptabilité (ventes)',all:'TOUTES les données',chat:'le Chat Interne',notes:'les Notes & Mémos',planning:'l\'Emploi du Temps'};
   openModal('Réinitialiser','Effacer définitivement les données de '+( labels[tab]||tab)+' ?',async()=>{
@@ -3568,4 +3643,5 @@ loadAll();
 <div id="copyright-footer">Copyright &copy; James</div>
 </body>
 </html>
+
 
