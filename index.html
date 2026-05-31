@@ -46,7 +46,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .status-pill.offline{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,0.3);}
 .user-badge{display:flex;align-items:center;gap:9px;padding:5px 13px 5px 5px;background:var(--card);border:1px solid var(--border);border-radius:24px;cursor:pointer;transition:all var(--transition);}
 .user-badge:hover{border-color:var(--accent);background:var(--accent-dim);}
-.user-avatar{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),#c47010);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#000;}
+.user-avatar{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),#c47010);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#000;overflow:hidden;}
 .user-info{line-height:1.2;}
 .user-name{font-size:12.5px;font-weight:600;}
 .user-grade{font-size:10.5px;color:var(--accent);}
@@ -165,7 +165,7 @@ tr:hover td{background:rgba(255,255,255,0.025);}
 @keyframes spin{to{transform:rotate(360deg);}}
 /* MON COMPTE */
 .compte-hero{display:flex;align-items:center;gap:24px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:26px;margin-bottom:22px;}
-.compte-avatar{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#c47010);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:#000;box-shadow:0 0 0 4px rgba(232,160,32,0.25);flex-shrink:0;}
+.compte-avatar{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#c47010);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:#000;box-shadow:0 0 0 4px rgba(232,160,32,0.25);flex-shrink:0;overflow:hidden;transition:opacity 0.2s;}
 .compte-name{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:4px;}
 .compte-since{font-size:12px;color:var(--text2);}
 .compte-stats-mini{display:flex;gap:20px;margin-top:12px;}
@@ -349,6 +349,7 @@ body.light-mode tr:hover td{background:rgba(0,0,0,0.02);}
     <div class="login-sub">Entrez vos identifiants pour accéder au système</div>
     <div class="login-field"><label class="login-label">Identifiant</label><input type="text" class="login-input" id="login-id" placeholder="votre_identifiant" autocomplete="off"></div>
     <div class="login-field"><label class="login-label">Mot de passe</label><input type="password" class="login-input" id="login-pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><input type="checkbox" id="remember-me" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer"><label for="remember-me" style="font-size:13px;color:var(--text2);cursor:pointer;user-select:none">Se souvenir de moi</label></div>
     <button class="login-btn" onclick="doLogin()">ACCÉDER AU PANNEAU →</button>
     <div class="login-error" id="login-error">Identifiant ou mot de passe incorrect</div>
     <div class="login-hint" style="display:none"></div>
@@ -399,12 +400,13 @@ body.light-mode tr:hover td{background:rgba(0,0,0,0.02);}
       <button class="nav-item" onclick="showPage('compte',this)"><span class="nav-icon">👤</span> Mon Compte</button>
       <button class="nav-item" onclick="showPage('caisse',this)"><span class="nav-icon">💰</span> Caisse</button>
       <button class="nav-item" onclick="showPage('run',this)"><span class="nav-icon">🚗</span> Run</button>
-      <button class="nav-item" onclick="showPage('chat',this)"><span class="nav-icon">💬</span> Chat Interne<span id="chat-unread-nav" style="display:none;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-left:auto">0</span></button>
-      <button class="nav-item" onclick="showPage('mp',this)"><span class="nav-icon">💌</span> Messages Privés<span id="mp-unread-nav" style="display:none;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-left:auto">0</span></button>
-      <button class="nav-item" onclick="showPage('galerie',this)"><span class="nav-icon">📸</span> Galerie Preuves</button>
       <button class="nav-item" onclick="showPage('reglement',this)"><span class="nav-icon">📜</span> Règlement</button>
       <button class="nav-item" id="achat-nav-btn" onclick="showPage('achat',this)" style="display:none"><span class="nav-icon">🏷️</span> Prix d'Achat</button>
       <button class="nav-item" onclick="showPage('planning',this)"><span class="nav-icon">🗓</span> Emploi du Temps</button>
+      <div style="height:1px;background:var(--border);margin:8px 4px;opacity:0.6;"></div>
+      <div class="nav-section">COMMUNICATION</div>
+      <button class="nav-item" onclick="showPage('chat',this)"><span class="nav-icon">💬</span> Chat Interne<span id="chat-unread-nav" style="display:none;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-left:auto">0</span></button>
+      <button class="nav-item" onclick="showPage('mp',this)"><span class="nav-icon">💌</span> Messages Privés<span id="mp-unread-nav" style="display:none;background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-left:auto">0</span></button>
       <div style="height:1px;background:var(--border);margin:8px 4px;opacity:0.6;"></div>
       <div class="nav-section">GESTION</div>
       <button class="nav-item" onclick="showPage('stock',this)"><span class="nav-icon">📦</span> Stock</button>
@@ -412,6 +414,7 @@ body.light-mode tr:hover td{background:rgba(0,0,0,0.02);}
       <button class="nav-item" onclick="showPage('employes',this)"><span class="nav-icon">👥</span> Vendeurs</button>
       <button class="nav-item" onclick="showPage('rapport',this)"><span class="nav-icon">📊</span> Rapports</button>
       <button class="nav-item" onclick="showPage('comptabilite',this)"><span class="nav-icon">🧾</span> Comptabilité</button>
+      <button class="nav-item" id="galerie-nav-btn" onclick="showPage('galerie',this)" style="display:none"><span class="nav-icon">📸</span> Galerie Preuves</button>
       <div style="height:1px;background:var(--border);margin:8px 4px;opacity:0.6;" id="admin-sep-1"></div>
       <div class="nav-section" id="admin-section" style="display:none">ADMIN</div>
       <button class="nav-item" id="admin-nav-btn" onclick="showPage('admin',this)" style="display:none"><span class="nav-icon">⚙️</span> Administration</button>
@@ -458,13 +461,18 @@ body.light-mode tr:hover td{background:rgba(0,0,0,0.02);}
       <div class="page" id="page-compte">
         <div class="page-header"><div><div class="page-title">Mon Compte</div><div class="page-sub">Profil · Statistiques personnelles</div></div></div>
         <div class="compte-hero">
-          <div class="compte-avatar" id="mc-avatar">P</div>
+          <div style="position:relative;cursor:pointer;flex-shrink:0" onclick="document.getElementById('avatar-upload').click()" title="Changer la photo de profil">
+            <div class="compte-avatar" id="mc-avatar">P</div>
+            <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,0.4)">📷</div>
+          </div>
+          <input type="file" id="avatar-upload" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this)">
           <div style="flex:1">
             <div class="compte-name" id="mc-name">—</div>
             <div id="mc-grade-badge" style="margin-bottom:8px"></div>
             <div class="compte-since" id="mc-since"></div>
             <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
               <button class="btn btn-outline btn-sm" onclick="openChangePwModal()" style="font-size:12px">🔑 Changer mon mot de passe</button>
+              <button class="btn btn-outline btn-sm" onclick="document.getElementById('avatar-upload').click()" style="font-size:12px">📷 Changer ma photo</button>
               <button class="btn btn-danger btn-sm" onclick="doLogout()" style="font-size:12px">⎋ Déconnexion</button>
             </div>
             <div class="compte-stats-mini">
@@ -1356,6 +1364,7 @@ async function loadAll(){
 
   document.getElementById('loading-overlay').style.display='none';
   document.getElementById('login-page').style.display='flex';
+  loadSavedCredentials();
 }
 
 // ===== LISTENERS TEMPS RÉEL =====
@@ -1464,22 +1473,25 @@ function getWeekBounds(){
 function fmtDate(d){return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});}
 
 // ===== LOGIN =====
-async function doLogin(){
-  const id=document.getElementById('login-id').value.trim();
-  const pw=document.getElementById('login-pw').value;
-  const acc=accounts.find(a=>a.id===id&&a.pw===pw);
-  if(!acc){document.getElementById('login-error').style.display='block';return;}
-  currentUser=acc;
-  // Mettre à jour lastLogin
-  acc.lastLogin=new Date().toISOString();
-  saveAccounts();
-  document.getElementById('login-page').style.display='none';
-  document.getElementById('app').style.display='block';
-  document.getElementById('user-avatar').textContent=acc.name.charAt(0).toUpperCase();
-  document.getElementById('user-display').textContent=acc.name;
-  const g=GRADES[acc.grade];
-  document.getElementById('user-grade-display').textContent=g.icon+' '+g.name;
+// Pré-remplir les credentials sauvegardés
+function loadSavedCredentials(){
+  const saved=localStorage.getItem('ltd_saved_credentials');
+  if(saved){
+    try{
+      const {id,pw}=JSON.parse(saved);
+      const idEl=document.getElementById('login-id');
+      const pwEl=document.getElementById('login-pw');
+      const remEl=document.getElementById('remember-me');
+      if(idEl)idEl.value=id||'';
+      if(pwEl)pwEl.value=pw||'';
+      if(remEl)remEl.checked=true;
+    }catch(e){}
+  }
+}
+
+async function applyUserAccess(acc){
   const isAdmin=acc.grade>=5; // Co-Patron ou Patron
+  const isPatron=acc.grade===6;
   document.getElementById('admin-nav-btn').style.display=isAdmin?'flex':'none';
   document.getElementById('admin-section').style.display=isAdmin?'block':'none';
   // Prix achat visible uniquement co-patron et patron
@@ -1489,8 +1501,18 @@ async function doLogin(){
   const rbtn=document.getElementById('restock-nav-btn');if(rbtn)rbtn.style.display=isAdmin?'flex':'none';
   const vpbtn=document.getElementById('vuepatron-nav-btn');if(vpbtn)vpbtn.style.display=isAdmin?'flex':'none';
   const factbtn=document.getElementById('factures-nav-btn');if(factbtn)factbtn.style.display=isAdmin?'flex':'none';
-  await loadMpConversations();
-  updateMpUnreadBadge();
+  // Galerie : visible seulement admin ou si le patron a accordé l'accès au grade de l'utilisateur
+  const galerieBtn=document.getElementById('galerie-nav-btn');
+  if(galerieBtn){
+    let galerieAccess=isAdmin; // admin toujours accès
+    if(!galerieAccess){
+      // Vérifier si le patron a accordé l'accès à ce grade
+      const perms=permissions||{};
+      const gradePerms=perms[acc.grade]||{};
+      if(gradePerms.galerie)galerieAccess=true;
+    }
+    galerieBtn.style.display=galerieAccess?'flex':'none';
+  }
   // Bouton modifier règlement visible seulement admin
   const editRegBtn=document.getElementById('edit-reglement-btn');
   if(editRegBtn)editRegBtn.style.display=isAdmin?'inline-flex':'none';
@@ -1500,6 +1522,36 @@ async function doLogin(){
   // Bouton ajouter note
   const addNoteBtn=document.getElementById('add-note-btn');
   if(addNoteBtn)addNoteBtn.style.display=isAdmin?'inline-flex':'none';
+}
+
+async function doLogin(){
+  const id=document.getElementById('login-id').value.trim();
+  const pw=document.getElementById('login-pw').value;
+  const acc=accounts.find(a=>a.id===id&&a.pw===pw);
+  if(!acc){document.getElementById('login-error').style.display='block';return;}
+  currentUser=acc;
+  // Remember me
+  const rememberMe=document.getElementById('remember-me')?.checked;
+  if(rememberMe){
+    localStorage.setItem('ltd_saved_credentials',JSON.stringify({id,pw}));
+  }else{
+    localStorage.removeItem('ltd_saved_credentials');
+  }
+  // Mettre à jour lastLogin
+  acc.lastLogin=new Date().toISOString();
+  saveAccounts();
+  document.getElementById('login-page').style.display='none';
+  document.getElementById('app').style.display='block';
+  // Avatar : photo ou initiale
+  const avatarEl=document.getElementById('user-avatar');
+  if(acc.photo){avatarEl.style.backgroundImage='url('+acc.photo+')';avatarEl.style.backgroundSize='cover';avatarEl.style.backgroundPosition='center';avatarEl.textContent='';}
+  else{avatarEl.style.backgroundImage='';avatarEl.textContent=acc.name.charAt(0).toUpperCase();}
+  document.getElementById('user-display').textContent=acc.name;
+  const g=GRADES[acc.grade];
+  document.getElementById('user-grade-display').textContent=g.icon+' '+g.name;
+  await applyUserAccess(acc);
+  await loadMpConversations();
+  updateMpUnreadBadge();
   // Restaurer thème
   const savedTheme=localStorage.getItem('ltd_theme');
   if(savedTheme==='light'){document.body.classList.add('light-mode');document.getElementById('theme-toggle-btn').textContent='☀️';}
@@ -1758,13 +1810,37 @@ function openSaleDetail(idx){
 }
 
 // ===== MON COMPTE — live update =====
+// ===== PHOTO DE PROFIL =====
+async function uploadProfilePhoto(input){
+  const file=input.files[0];
+  if(!file)return;
+  if(file.size>2*1024*1024){showToast('⚠ Photo trop lourde (max 2MB)',true);return;}
+  const reader=new FileReader();
+  reader.onload=async ev=>{
+    if(!currentUser)return;
+    currentUser.photo=ev.target.result;
+    const acc=accounts.find(a=>a.id===currentUser.id);
+    if(acc)acc.photo=ev.target.result;
+    await saveAccounts();
+    // Mettre à jour avatar dans la topbar
+    const topAv=document.getElementById('user-avatar');
+    if(topAv){topAv.style.backgroundImage='url('+ev.target.result+')';topAv.style.backgroundSize='cover';topAv.style.backgroundPosition='center';topAv.textContent='';}
+    renderMonCompte();
+    showToast('✓ Photo de profil mise à jour');
+  };
+  reader.readAsDataURL(file);
+  input.value='';
+}
+
 function renderMonCompte(){
   if(!currentUser)return;
   // Refresh currentUser from accounts to get latest data
   currentUser=accounts.find(a=>a.id===currentUser.id)||currentUser;
   const acc=currentUser;
   const g=GRADES[acc.grade];
-  document.getElementById('mc-avatar').textContent=acc.name.charAt(0).toUpperCase();
+  const mcAv=document.getElementById('mc-avatar');
+  if(acc.photo){mcAv.style.backgroundImage='url('+acc.photo+')';mcAv.style.backgroundSize='cover';mcAv.style.backgroundPosition='center';mcAv.textContent='';}
+  else{mcAv.style.backgroundImage='';mcAv.textContent=acc.name.charAt(0).toUpperCase();}
   document.getElementById('mc-name').textContent=acc.name;
   document.getElementById('mc-grade-badge').innerHTML=`<span class="grade-badge ${g.class}">${g.icon} ${g.name}</span>`;
   const joinDate=acc.joinDate?new Date(acc.joinDate).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
@@ -2968,6 +3044,7 @@ const DEFAULT_PERMISSIONS={
   canViewOtherSales:false,
   canDeleteProducts:false,
   canModifyStock:false,
+  galerie:false,
 };
 const PERM_LABELS={
   canViewCaisse:'Accès Caisse',
@@ -2980,6 +3057,7 @@ const PERM_LABELS={
   canViewOtherSales:'Voir ventes des autres',
   canDeleteProducts:'Supprimer des produits',
   canModifyStock:'Modifier le stock',
+  galerie:'📸 Accès Galerie des Preuves',
 };
 
 function getPermissions(gradeIdx){
@@ -3023,6 +3101,8 @@ function togglePerm(gradeIdx,key,val){
 
 async function savePermissions(){
   await dbSet('permissions',permissions);
+  // Rafraîchir la visibilité du bouton galerie pour l'utilisateur actuel
+  if(currentUser)await applyUserAccess(currentUser);
   showToast('✓ Permissions sauvegardées');
 }
 
